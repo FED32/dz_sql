@@ -27,7 +27,7 @@ where district like 'K%a' and district not like '% %';
 --Платежи нужно отсортировать по дате платежа.
 
 select payment_id, payment_date, amount from payment
-where payment_date between '17-03-2007' and '19-03-2007' and amount>1.00
+where payment_date::date between '17-03-2007' and '19-03-2007' and amount>1.00
 order by payment_date;
 
 
@@ -49,8 +49,12 @@ limit 10;
 --  4. Дату последнего обновления записи о покупателе (без времени)
 --Каждой колонке задайте наименование на русском языке.
 
-select concat(first_name,' ', last_name) as "Фамилия и имя", email as "Электронная почта", character_length(email) as "Длина Email", to_char(last_update, 'YYYY-MM-DD') as "Дата" from customer;
-
+--select concat(first_name,' ', last_name) as "Фамилия и имя", email as "Электронная почта", character_length(email) as "Длина Email", to_char(last_update, 'YYYY-MM-DD') as "Дата" from customer;
+select concat(first_name,' ', last_name) as "Фамилия и имя",
+email as "Электронная почта",
+character_length(email) as "Длина Email",
+last_update::date as "Дата"
+from customer;
 
 
 --ЗАДАНИЕ №6
@@ -88,16 +92,16 @@ limit 3;
 --в первой колонке должно быть значение, указанное до @, 
 --во второй колонке должно быть значение, указанное после @.
 
-select Name, value 
+select customer_id, email, split_part(email, '@', 1) as "Email before @", split_part(email, '@', 2) as "Email after @"
 from customer
-	cross string_split(email, "@");
---select value from string_split(email, @) from customer
---string_split(email, @)
---Здесь уже не достаточно знаний, требуется углубленное изучение sql
+
 
 --ЗАДАНИЕ №4
 --Доработайте запрос из предыдущего задания, скорректируйте значения в новых колонках: 
 --первая буква должна быть заглавной, остальные строчными.
 
-
+select customer_id, email, 
+concat(upper(left(split_part(email, '@', 1), 1)), substring(split_part(email, '@', 1), 2)) as "Email before @", 
+concat(upper(left(split_part(email, '@', 2), 1)), substring(split_part(email, '@', 2), 2)) as "Email after @"
+from customer
 
