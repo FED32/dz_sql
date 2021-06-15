@@ -22,12 +22,19 @@ order by film_id
 
 select film_id, title, special_features 
 from film
-where '{Behind the Scenes}'<@ special_features
+where '{Behind the Scenes}' && special_features
 order by film_id
+
 
 select film_id, title, special_features 
 from film
-where '{Behind the Scenes}' && special_features
+where special_features::text ilike '%Behind the Scenes%'
+order by film_id
+
+
+select film_id, title, special_features 
+from film
+where 'Behind the Scenes' = any(special_features)
 order by film_id
 
 
@@ -111,15 +118,20 @@ order by film_id
 explain analyze
 select film_id, title, special_features 
 from film
-where '{Behind the Scenes}'<@ special_features
+where '{Behind the Scenes}' && special_features
 order by film_id
-
 
 
 explain analyze
 select film_id, title, special_features 
 from film
-where '{Behind the Scenes}' && special_features
+where special_features::text ilike '%Behind the Scenes%'
+order by film_id
+
+explain analyze
+select film_id, title, special_features 
+from film
+where 'Behind the Scenes' = any(special_features)
 order by film_id
 
 
@@ -148,10 +160,14 @@ inner join (select film_id, title, special_features
 group by customer_id
 order by customer_id
 
-explain analyze
 
 
---1 суммарное время поиска в массиве с использованием @>, <@, && примерно одинаково
+--1 суммарное время поиска в массиве с использованием @>, <@, && примерно одинаково, преобразование в текст приводит к увеличению времени при сортировке, функция any работает соизмеримо с &&
+--&& Seq Scan on film  (cost=0.00..66.19 rows=525 width=78) (actual time=0.014..0.497 rows=538 loops=1), Sort  (cost=89.91..91.22 rows=525 width=78) (actual time=0.636..0.654 rows=538 loops=1)
+--::text ilike Seq Scan on film  (cost=0.00..71.06 rows=1 width=78) (actual time=0.026..4.362 rows=538 loops=1), Sort  (cost=71.07..71.08 rows=1 width=78) (actual time=4.539..4.560 rows=538 loops=1)
+--any Seq Scan on film  (cost=0.00..75.94 rows=525 width=78) (actual time=0.014..0.453 rows=538 loops=1), Sort  (cost=99.66..100.97 rows=525 width=78) (actual time=0.495..0.513 rows=538 loops=1)
+
+
 --@> Seq Scan on film  (cost=0.00..66.19 rows=525 width=78) (actual time=0.015..0.504 rows=538 loops=1)
 --<@ Seq Scan on film  (cost=0.00..66.19 rows=525 width=78) (actual time=0.019..0.538 rows=538 loops=1)
 --&& Seq Scan on film  (cost=0.00..66.19 rows=525 width=78) (actual time=0.027..0.535 rows=538 loops=1)
